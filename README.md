@@ -316,13 +316,14 @@ Disassembly of section .plt:
     1026:	f2 ff 25 9b 2f 00 00 	bnd jmp *0x2f9b(%rip)        # 3fc8 <_GLOBAL_OFFSET_TABLE_+0x10>
     102d:	0f 1f 00             	nopl   (%rax)
     1030:	f3 0f 1e fa          	endbr64 
-    1034:	68 00 00 00 00       	push   $0x0
-    1039:	f2 e9 e1 ff ff ff    	bnd jmp 1020 <_init+0x20>
+    1034:	68 00 00 00 00       	push   $0x0 <siddhant's comment: plt entry corresponding to add, code jumps here in case the symbol is lazily loaded> 
+    1039:	f2 e9 e1 ff ff ff    	bnd jmp 1020 <_init+0x20> <siddhant's comment: jumps to start of .plt>
     103f:	90                   	nop
 
 Disassembly of section .plt.got:
 
 0000000000001040 <__cxa_finalize@plt>:
+    <siddhant's comment: I don't know why this is here or the mechanism of how it resolves. Instuction in 1044 always resolvede to correct function no matter lazy loaded or not>
     1040:	f3 0f 1e fa          	endbr64 
     1044:	f2 ff 25 ad 2f 00 00 	bnd jmp *0x2fad(%rip)        # 3ff8 <__cxa_finalize@GLIBC_2.2.5>
     104b:	0f 1f 44 00 00       	nopl   0x0(%rax,%rax,1)
@@ -330,6 +331,7 @@ Disassembly of section .plt.got:
 Disassembly of section .plt.sec:
 
 0000000000001050 <add(int, int)@plt>:
+    <siddhant's comment: Lazy loading of add in case -Wl,-z,lazy is specified. Instruction at 1054 refers to the got for add. If its loaded it jumps to corresponding function, if not jumps to .plt entry for add (1034)>
     1050:	f3 0f 1e fa          	endbr64 
     1054:	f2 ff 25 75 2f 00 00 	bnd jmp *0x2f75(%rip)        # 3fd0 <add(int, int)@Base>
     105b:	0f 1f 44 00 00       	nopl   0x0(%rax,%rax,1)
@@ -431,5 +433,4 @@ Disassembly of section .fini:
     1180:	48 83 ec 08          	sub    $0x8,%rsp
     1184:	48 83 c4 08          	add    $0x8,%rsp
     1188:	c3                   	ret    
-```
 ```
