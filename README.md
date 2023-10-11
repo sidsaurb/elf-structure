@@ -1,21 +1,30 @@
 # elf-structure
 
 **main.cpp:**
+```shell
 int add(int a, int b);
 
 int main() {
     int x = add(10, 20);
     return add(x, 20);
 }
-
+```
 **libmath.cpp:**
+```shell
 int add(int a, int b) {
     return a+b;
 }
+```
 
 **Compilation:**
+```shell
 g++ --shared -o libmath.so -fPIC libmath.cpp
 g++ main.cpp -Wl,-rpath,. -L. -lmath -o main
+```
+
+```shell
+readelf --all -W --demangle main
+```
 
 ```shell
 ELF Header:
