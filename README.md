@@ -43,35 +43,65 @@ Section Headers:
   [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
   [ 0]                   NULL            0000000000000000 000000 000000 00      0   0  0
   [ 1] .interp           PROGBITS        0000000000000318 000318 00001c 00   A  0   0  1
+    Contains the string /lib64/ld-linux-x86-64.so.2  - try readelf -x .interp main-lazy
   [ 2] .note.gnu.property NOTE            0000000000000338 000338 000030 00   A  0   0  8
+    Don't know what this is yet
   [ 3] .note.gnu.build-id NOTE            0000000000000368 000368 000024 00   A  0   0  4
+    Don't know what this is yet
   [ 4] .note.ABI-tag     NOTE            000000000000038c 00038c 000020 00   A  0   0  4
+    Don't know what this is yet
   [ 5] .gnu.hash         GNU_HASH        00000000000003b0 0003b0 000024 00   A  6   0  8
+    Don't know what this is yet
   [ 6] .dynsym           DYNSYM          00000000000003d8 0003d8 0000a8 18   A  7   1  8
+    This is a symbol table which contains all the symbols in the program that are undefined. This is a subset of .symtab
   [ 7] .dynstr           STRTAB          0000000000000480 000480 00009e 00   A  0   0  1
+    This is a string table which contains list of string referred to by .dynsym and .dynamic sections. This contains entry repeated from .strtab. i.e. same name are also present in .strtab
   [ 8] .gnu.version      VERSYM          000000000000051e 00051e 00000e 02   A  6   0  2
+    Don't know what this is yet
   [ 9] .gnu.version_r    VERNEED         0000000000000530 000530 000030 00   A  7   1  8
+    Don't know what this is yet
   [10] .rela.dyn         RELA            0000000000000560 000560 0000c0 18   A  6   0  8
+    This is a relocation table which is a subset of .dynsym. It contains records that are dynamically resolved by runtime linker using a mechanism I don't know yet. Addresses for symbols in this table don't seem to be loading lazily, rather they are getting loaded at load time itself. Even if you specity -Wl,-z,lazy. One of the symbols in this section __cxa_finalize appears in .plt.got section of code. Its instructions are very similar to .plt.sec section code which is actually used for lazy loading. But code in .plt.got does not do lazy loading.
   [11] .rela.plt         RELA            0000000000000620 000620 000018 18  AI  6  24  8
+    This is a relocation table which is a subset of .dynsym. It contains record that can be lazily loaded or loaded at start depending on flag. This i understand. It loads corresponding entry from GOT and jumps to that instuction. If the symbol is loaded, it goes to corresponding instruction of the loaded function, if not it jumps to corresponding entry in .plt section. -Wl,-z,lazy affects this.
   [12] .init             PROGBITS        0000000000001000 001000 00001b 00  AX  0   0  4
+    Don't know what this is yet
   [13] .plt              PROGBITS        0000000000001020 001020 000020 10  AX  0   0 16
+    It contains code for jumpling to dynamic linker. It has similar instructions for each symbol in .rela.plt, that ultimately jumps to dynamic linker
   [14] .plt.got          PROGBITS        0000000000001040 001040 000010 10  AX  0   0 16
+    This section contains code for .rela.dyn symbols. Refer its description
   [15] .plt.sec          PROGBITS        0000000000001050 001050 000010 10  AX  0   0 16
+    This section contains code for .rela.plt symbols. Refer its description
   [16] .text             PROGBITS        0000000000001060 001060 000119 00  AX  0   0 16
+    Acutal code for program
   [17] .fini             PROGBITS        000000000000117c 00117c 00000d 00  AX  0   0  4
+    Don't know what this is yet
   [18] .rodata           PROGBITS        0000000000002000 002000 000004 04  AM  0   0  4
+    Read only data in the program. Refer .data section description
   [19] .eh_frame_hdr     PROGBITS        0000000000002004 002004 000034 00   A  0   0  4
+    Don't know what this is yet
   [20] .eh_frame         PROGBITS        0000000000002038 002038 0000ac 00   A  0   0  8
+    Don't know what this is yet
   [21] .init_array       INIT_ARRAY      0000000000003d98 002d98 000008 08  WA  0   0  8
+    Contains list of addresses of functions that needs to be called to initialize global variables before the control is handled to main. One for each translation unit statically linked.
   [22] .fini_array       FINI_ARRAY      0000000000003da0 002da0 000008 08  WA  0   0  8
+    Contains list of addresses of functions that needs to be called before program exits. One for each translation unit statically linked.
   [23] .dynamic          DYNAMIC         0000000000003da8 002da8 000210 10  WA  7   0  8
+    Table of structures that guide the dynamic properties of this program. For example: rpath, list of dynamically linked libraries, bind now vs bind lazily. These 2 i understand rest I don't
   [24] .got              PROGBITS        0000000000003fb8 002fb8 000048 08  WA  0   0  8
+    Global offset table that contains the mapping of all the undefined and dynamically linked symbols: variables and functions. All variables are bound at load time. Functions we can choose to bind lazily or at load time using flag: -Wl,-z,now or -Wl,-z,lazy. Instant binding by default if you don't specify anything. man page of ld says otherwise
   [25] .data             PROGBITS        0000000000004000 003000 000010 00  WA  0   0  8
+    Contains the Initialized global variables. For example int a = 10 in globa scope, Here 10 will go in .data. But int a = 0, it will go in .bss. What goes where amonst .bss and .data and .rodata is to the complier for great extent.
   [26] .bss              NOBITS          0000000000004010 003010 000008 00  WA  0   0  1
+    Contains uninitialized global primitive vairiables and zero initialized global primitive variables and gloablly initilized object variables. .bss is guaranteed to be initilized to zero by loader. For initialized global objects: objects are constructed even before main is caled. see description of .init_array. My hunch is Local staic variables should also be stored this way. But I am not sure. .bss section does not utilize any space on the executable file and is only initialized to zero by loader. An optimization to save disk space. 
   [27] .comment          PROGBITS        0000000000000000 003010 00002b 01  MS  0   0  1
+    Don't know what this is yet
   [28] .symtab           SYMTAB          0000000000000000 003040 000360 18     29  18  8
+    This is the table which contains all the defined and undefined symbols in the program and infromation about them.
   [29] .strtab           STRTAB          0000000000000000 0033a0 0001d4 00      0   0  1
+    This table contains the names of all the symbols contained in the program. Referred by .symtab
   [30] .shstrtab         STRTAB          0000000000000000 003574 00011a 00      0   0  1
+    Section Header string table. This table contains names of all the sections that are in the program. 
 Key to Flags:
   W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
   L (link order), O (extra OS processing required), G (group), T (TLS),
@@ -83,19 +113,30 @@ There are no section groups in this file.
 Program Headers:
   Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
   PHDR           0x000040 0x0000000000000040 0x0000000000000040 0x0002d8 0x0002d8 R   0x8
+    Don't know what this is yet
   INTERP         0x000318 0x0000000000000318 0x0000000000000318 0x00001c 0x00001c R   0x1
       [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]
   LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x000638 0x000638 R   0x1000
+    It says to load x638 bytes from file offset 0x0 at virtaual memory 0x0
   LOAD           0x001000 0x0000000000001000 0x0000000000001000 0x000189 0x000189 R E 0x1000
+    It says to load x189 bytes from file offset 0x1000 at virtaual memory 0x1000
   LOAD           0x002000 0x0000000000002000 0x0000000000002000 0x0000e4 0x0000e4 R   0x1000
+    It says to load x4e bytes from file offset 0x2000 at virtaual memory 0x2000
   LOAD           0x002d98 0x0000000000003d98 0x0000000000003d98 0x000278 0x000280 RW  0x1000
+    It says to load x278 bytes from file offset 0x29d8 at virtaual memory 0x39d8. Not that it says to allot 0x280 bytes insted to 0x278. Its because this program header maps .bss as well. .bss does not use space in file but allocates space in program runtime memory.
   DYNAMIC        0x002da8 0x0000000000003da8 0x0000000000003da8 0x000210 0x000210 RW  0x8
+    Don't know what this is yet
   NOTE           0x000338 0x0000000000000338 0x0000000000000338 0x000030 0x000030 R   0x8
   NOTE           0x000368 0x0000000000000368 0x0000000000000368 0x000044 0x000044 R   0x4
+    Don't know what this is yet
   GNU_PROPERTY   0x000338 0x0000000000000338 0x0000000000000338 0x000030 0x000030 R   0x8
+    Don't know what this is yet
   GNU_EH_FRAME   0x002004 0x0000000000002004 0x0000000000002004 0x000034 0x000034 R   0x4
+    Don't know what this is yet
   GNU_STACK      0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW  0x10
+    Don't know what this is yet
   GNU_RELRO      0x002d98 0x0000000000003d98 0x0000000000003d98 0x000268 0x000268 R   0x1
+    Sets a flag that 0x268 bytes from 0x0000000000003d98 should be made readonly after the loading is done. Security mechanism to make the .init_array, .fini_array .dynamic and .got read only after program is loaded. can be disabled by -Wl,-z,norelro. See the section to segment mapping index 05
 
  Section to Segment mapping:
   Segment Sections...
