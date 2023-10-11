@@ -17,6 +17,7 @@ int add(int a, int b) {
 g++ --shared -o libmath.so -fPIC libmath.cpp
 g++ main.cpp -Wl,-rpath,. -L. -lmath -o main
 
+```shell
 ELF Header:
   Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00 
   Class:                             ELF64
@@ -236,6 +237,6 @@ Displaying notes found in: .note.gnu.build-id
 Displaying notes found in: .note.ABI-tag
   Owner                Data size 	Description
   GNU                  0x00000010	NT_GNU_ABI_TAG (ABI version tag)	    OS: Linux, ABI: 3.2.0
-
+```
 
 
